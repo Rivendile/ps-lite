@@ -8,6 +8,7 @@
 #include <vector>
 #include "ps/base.h"
 #include "ps/simple_app.h"
+#include "ps/internal/postoffice.h"
 namespace ps {
 
 /**
@@ -418,6 +419,18 @@ void KVWorker<Val>::DefaultSlicer(
   std::vector<size_t> pos(n+1);
   const Key* begin = send.keys.begin();
   const Key* end = send.keys.end();
+    
+    PS_VLOG(1)<<"default slicer: ranges";
+    for (size_t i=0;i<n;++i){
+        PS_VLOG(1)<<ranges[i].begin()<<" "<<ranges[i].end();
+    }
+    PS_VLOG(1)<<"default slicer: send keys";
+    for (size_t i=0;i<send.keys.size();++i)
+        PS_VLOG(1)<<send.keys.at(i);
+    PS_VLOG(1)<<"default slicer: send vals";
+    for (size_t i=0;i<send.vals.size();++i)
+        PS_VLOG(1)<<send.vals.at(i);
+  
   for (size_t i = 0; i < n; ++i) {
     if (i == 0) {
       pos[0] = std::lower_bound(begin, end, ranges[0].begin()) - begin;
