@@ -72,10 +72,13 @@ class KVWorker : public SimpleApp {
   explicit KVWorker(int app_id, int customer_id) : SimpleApp() {
     using namespace std::placeholders;
     int slicer_kind =atoi(Environment::Get()->find("PS_SLICER"));
-    if (slicer_kind==0)
+    if (slicer_kind==0){
       slicer_ = std::bind(&KVWorker<Val>::DefaultSlicer, this, _1, _2, _3);
-    else
+      PS_VLOG(1)<<"Slicer: Default range slicer";
+    }else{
       slicer_ = std::bind(&KVWorker<Val>::ModSlicer, this, _1, _2, _3);
+      PS_VLOG(1)<<"Slicer: Mod slicer";
+    }
     obj_ = new Customer(app_id, customer_id, std::bind(&KVWorker<Val>::Process, this, _1));
   }
 
