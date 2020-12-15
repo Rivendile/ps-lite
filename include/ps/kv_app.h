@@ -432,9 +432,9 @@ void KVWorker<Val>::DefaultSlicer(
   const Key* end = send.keys.end();
     
 //    PS_VLOG(1)<<"default slicer: ranges";
-    PS_VLOG(1)<<"default slicer: send keys";
-    for (size_t i=0;i<send.keys.size();++i)
-        PS_VLOG(1)<<send.keys[i];
+//    PS_VLOG(1)<<"default slicer: send keys";
+//    for (size_t i=0;i<send.keys.size();++i)
+//        PS_VLOG(1)<<send.keys[i];
 //    PS_VLOG(1)<<"default slicer: send vals";
 //    for (size_t i=0;i<send.vals.size();++i)
 //        PS_VLOG(1)<<send.vals[i];
@@ -496,9 +496,9 @@ void KVWorker<Val>::ModSlicer(
     if (send.keys.empty()) return;
     
 //    PS_VLOG(1)<<"mod slicer";
-    PS_VLOG(1)<<"mod slicer: send keys";
-    for (size_t i=0;i<send.keys.size();++i)
-        PS_VLOG(1)<<send.keys[i];
+//    PS_VLOG(1)<<"mod slicer: send keys";
+//    for (size_t i=0;i<send.keys.size();++i)
+//        PS_VLOG(1)<<send.keys[i];
 //    PS_VLOG(1)<<"mod slicer: send vals";
 //    for (size_t i=0;i<send.vals.size();++i)
 //        PS_VLOG(1)<<send.vals[i];
