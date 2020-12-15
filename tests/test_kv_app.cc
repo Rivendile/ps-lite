@@ -1,4 +1,5 @@
 #include "ps/ps.h"
+#include "math.h"
 using namespace ps;
 
 void StartServer() {
@@ -15,7 +16,7 @@ void RunWorker() {
   KVWorker<float> kv(0, 0);
 
   // init
-  int num = 10000;
+  int num = 10;
   std::vector<Key> keys(num);
   std::vector<float> vals(num);
 
@@ -27,7 +28,7 @@ void RunWorker() {
   }
 
   // push
-  int repeat = 50;
+  int repeat = 20;
   std::vector<int> ts;
   for (int i = 0; i < repeat; ++i) {
     ts.push_back(kv.Push(keys, vals));
@@ -44,7 +45,9 @@ void RunWorker() {
   float res = 0;
   for (int i = 0; i < num; ++i) {
     res += fabs(rets[i] - vals[i] * repeat);
+//      LL << "test error: "<< i << " " << rets[i];
   }
+//    LL << "before check: "<< res<< " " << repeat;
   CHECK_LT(res / repeat, 1e-5);
   LL << "error: " << res / repeat;
 }

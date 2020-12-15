@@ -71,7 +71,11 @@ class KVWorker : public SimpleApp {
    */
   explicit KVWorker(int app_id, int customer_id) : SimpleApp() {
     using namespace std::placeholders;
-    slicer_ = std::bind(&KVWorker<Val>::DefaultSlicer, this, _1, _2, _3);
+    int slicer_kind =atoi(Environment::Get()->find("PS_SLICER"));
+    if (slicer_kind==0)
+      slicer_ = std::bind(&KVWorker<Val>::DefaultSlicer, this, _1, _2, _3);
+    else
+      slicer_ = std::bind(&KVWorker<Val>::ModSlicer, this, _1, _2, _3);
     obj_ = new Customer(app_id, customer_id, std::bind(&KVWorker<Val>::Process, this, _1));
   }
 
@@ -259,6 +263,10 @@ class KVWorker : public SimpleApp {
   void DefaultSlicer(const KVPairs<Val>& send,
                      const std::vector<Range>& ranges,
                      SlicedKVs* sliced);
+  void ModSlicer(const KVPairs<Val>& send,
+                 const std::vector<Range>& ranges,
+                     SlicedKVs* sliced);
+    
 
   /** \brief data buffer for received kvs for each timestamp */
   std::unordered_map<int, std::vector<KVPairs<Val>>> recv_kvs_;
@@ -420,16 +428,13 @@ void KVWorker<Val>::DefaultSlicer(
   const Key* begin = send.keys.begin();
   const Key* end = send.keys.end();
     
-    PS_VLOG(1)<<"default slicer: ranges";
-    for (size_t i=0;i<n;++i){
-        PS_VLOG(1)<<ranges[i].begin()<<" "<<ranges[i].end();
-    }
-    PS_VLOG(1)<<"default slicer: send keys";
-    for (size_t i=0;i<send.keys.size();++i)
-        PS_VLOG(1)<<send.keys.at(i);
-    PS_VLOG(1)<<"default slicer: send vals";
-    for (size_t i=0;i<send.vals.size();++i)
-        PS_VLOG(1)<<send.vals.at(i);
+//    PS_VLOG(1)<<"default slicer: ranges";
+//    PS_VLOG(1)<<"default slicer: send keys";
+//    for (size_t i=0;i<send.keys.size();++i)
+//        PS_VLOG(1)<<send.keys[i];
+//    PS_VLOG(1)<<"default slicer: send vals";
+//    for (size_t i=0;i<send.vals.size();++i)
+//        PS_VLOG(1)<<send.vals[i];
   
   for (size_t i = 0; i < n; ++i) {
     if (i == 0) {
@@ -475,6 +480,74 @@ void KVWorker<Val>::DefaultSlicer(
       kv.vals = send.vals.segment(pos[i]*k, pos[i+1]*k);
     }
   }
+}
+
+template <typename Val>
+void KVWorker<Val>::ModSlicer(
+    const KVPairs<Val>& send, const std::vector<Range>& ranges,
+    typename KVWorker<Val>::SlicedKVs* sliced) {
+    size_t num_servers = Postoffice::Get()->num_servers();
+    sliced->resize(num_servers);
+    CHECK_EQ(num_servers, ranges.size());
+
+    if (send.keys.empty()) return;
+    
+//    PS_VLOG(1)<<"mod slicer";
+//    PS_VLOG(1)<<"mod slicer: send keys";
+//    for (size_t i=0;i<send.keys.size();++i)
+//        PS_VLOG(1)<<send.keys[i];
+//    PS_VLOG(1)<<"mod slicer: send vals";
+//    for (size_t i=0;i<send.vals.size();++i)
+//        PS_VLOG(1)<<send.vals[i];
+  
+    size_t key_cnt = send.keys.size();
+    size_t val_cnt = send.vals.size();
+    size_t len_cnt = send.lens.size();
+    // the length of value
+    size_t k = 0, val_begin = 0, val_end = 0;
+
+    if (send.lens.empty()) {
+      k = send.vals.size() / send.keys.size();
+      CHECK_EQ(k * key_cnt,  val_cnt);
+    } else {
+      CHECK_EQ(key_cnt, len_cnt);
+    }
+    for (size_t i=0; i<num_servers; ++i){
+        sliced->at(i).first=false;
+        auto& kv = sliced->at(i).second;
+        kv.keys.clear();
+        kv.vals.clear();
+        kv.lens.clear();
+    }
+    // slice
+    for (size_t key_i = 0; key_i<key_cnt; ++key_i){
+        size_t id_sliced = key_i % num_servers;
+        sliced->at(id_sliced).first = true;
+        auto& kv = sliced->at(id_sliced).second;
+        kv.keys.push_back(send.keys[key_i]);
+        if (len_cnt){
+            kv.lens.push_back(send.lens[key_i]);
+            val_end += send.lens[key_i];
+            kv.vals.append(send.vals.segment(val_begin, val_end));
+            val_begin = val_end;
+        }else{
+            kv.vals.append(send.vals.segment(key_i*k, (key_i+1)*k));
+        }
+//        PS_VLOG(1)<<"mod slicer: slicing "<<key_i;
+    }
+    
+//    for (size_t i = 0 ;i<num_servers;++i){
+//        PS_VLOG(1)<<"mod slicer: sliced "<<sliced->at(i).first;
+//        PS_VLOG(1)<<"mod slicer: sliced keys";
+//        for (size_t ii=0;ii<sliced->at(i).second.keys.size();++ii)
+//            PS_VLOG(1)<<sliced->at(i).second.keys[ii];
+//        PS_VLOG(1)<<"mod slicer: sliced vals";
+//        for (size_t ii=0;ii<sliced->at(i).second.vals.size();++ii)
+//            PS_VLOG(1)<<sliced->at(i).second.vals[ii];
+//        PS_VLOG(1)<<"mod slicer: sliced lens";
+//        for (size_t ii=0;ii<sliced->at(i).second.lens.size();++ii)
+//            PS_VLOG(1)<<sliced->at(i).second.lens[ii];
+//    }
 }
 
 template <typename Val>
@@ -563,23 +636,42 @@ template <typename C, typename D>
 int KVWorker<Val>::Pull_(
     const SArray<Key>& keys, C* vals, D* lens, int cmd, const Callback& cb) {
   int ts = obj_->NewRequest(kServerGroup);
+//    PS_VLOG(1)<<"start pulling";
   AddCallback(ts, [this, ts, keys, vals, lens, cb]() mutable {
       mu_.lock();
       auto& kvs = recv_kvs_[ts];
       mu_.unlock();
 
+//      PS_VLOG(1)<<"start pulling: check";
       // do check
-      size_t total_key = 0, total_val = 0;
-      for (const auto& s : kvs) {
-        Range range = FindRange(keys, s.keys.front(), s.keys.back()+1);
-        CHECK_EQ(range.size(), s.keys.size())
-            << "unmatched keys size from one server";
-        if (lens) CHECK_EQ(s.lens.size(), s.keys.size());
-        total_key += s.keys.size();
-        total_val += s.vals.size();
+      size_t total_key = 0, total_val = 0, total_kvs = 0;
+      size_t keys_cnt = keys.size();
+      int slicer_kind =atoi(Environment::Get()->find("PS_SLICER"));
+      size_t num_servers = Postoffice::Get()->num_servers();
+      if (slicer_kind==0){
+          for (const auto& s : kvs) {
+            Range range = FindRange(keys, s.keys.front(), s.keys.back()+1);
+            CHECK_EQ(range.size(), s.keys.size())
+                << "unmatched keys size from one server";
+            if (lens) CHECK_EQ(s.lens.size(), s.keys.size());
+            total_key += s.keys.size();
+            total_val += s.vals.size();
+          }
+      }else{
+          std::vector<size_t> cnt_server(num_servers, 0);
+          for (size_t i=0; i<keys_cnt; ++i)
+            ++cnt_server[keys[i]%num_servers];
+          for (const auto& s : kvs){
+              CHECK_EQ(s.keys.size(), cnt_server[s.keys[0]%num_servers])
+                <<"unmatched keys size from one server";
+              total_key += s.keys.size();
+              total_val += s.vals.size();
+              ++ total_kvs;
+          }
       }
-      CHECK_EQ(total_key, keys.size()) << "lost some servers?";
+      CHECK_EQ(total_key, keys_cnt) << "lost some servers?";
 
+//      PS_VLOG(1)<<"start pulling: fill vals and lens";
       // fill vals and lens
       std::sort(kvs.begin(), kvs.end(), [](
           const KVPairs<Val>& a, const KVPairs<Val>& b) {
@@ -595,20 +687,63 @@ int KVWorker<Val>::Pull_(
       int *p_lens = nullptr;
       if (lens) {
         if (lens->empty()) {
-          lens->resize(keys.size());
+          lens->resize(keys_cnt);
         } else {
-          CHECK_EQ(lens->size(), keys.size());
+          CHECK_EQ(lens->size(), keys_cnt);
         }
         p_lens = lens->data();
       }
-      for (const auto& s : kvs) {
-        memcpy(p_vals, s.vals.data(), s.vals.size() * sizeof(Val));
-        p_vals += s.vals.size();
-        if (p_lens) {
-          memcpy(p_lens, s.lens.data(), s.lens.size() * sizeof(int));
-          p_lens += s.lens.size();
-        }
+//      PS_VLOG(1)<<"start pulling: deal with different slicer";
+      if (slicer_kind==0){
+          // deal with default range slicer
+          for (const auto& s : kvs) {
+            memcpy(p_vals, s.vals.data(), s.vals.size() * sizeof(Val));
+            p_vals += s.vals.size();
+            if (p_lens) {
+              memcpy(p_lens, s.lens.data(), s.lens.size() * sizeof(int));
+              p_lens += s.lens.size();
+            }
+          }
+      }else{
+          // deal with mod slicer
+          std::vector<size_t> cnt_s(total_kvs, 0);
+          std::vector<size_t> cnt_sv(total_kvs, 0);
+//          PS_VLOG(1)<<"start pulling: "<<total_kvs<<" "<<keys_cnt;
+          for (size_t i=0; i<keys_cnt; ++i){
+//              PS_VLOG(1)<<"start pulling: "<<i;
+              size_t j=0, k;
+              for (j=0;j<total_kvs;++j){
+                  auto& s = kvs[j];
+//                  PS_VLOG(1)<<"start pulling: "<<i<<" "<<j<<" "<<keys[i]<<" "<<s.keys[cnt_s[j]];
+                  if (cnt_s[j]>=s.keys.size())
+                      continue;
+                  if (keys[i]==s.keys[cnt_s[j]]){
+                      size_t vector_id = cnt_s[j];
+                      if (s.lens.empty())
+                          k = s.vals.size() / s.keys.size();
+                      else
+                          k = s.lens[vector_id];
+//                      PS_VLOG(1)<<"start pulling: keys equal "<<cnt_sv[j]<<" "<<vector_id<<" "<<k;
+                      memcpy(p_vals, s.vals.data()+cnt_sv[j], k * sizeof(Val));
+                      p_vals += k;
+//                      PS_VLOG(1)<<"start pulling: memcpy p_vals";
+                      if (p_lens){
+                          memcpy(p_lens, s.lens.data()+vector_id, sizeof(int));
+                          p_lens += 1;
+                      }
+//                      PS_VLOG(1)<<"start pulling: memcpy p_lens";
+                      cnt_sv[j] += k;
+                      ++cnt_s[j];
+                      break;
+                  }
+              }
+              if (j>=total_kvs){
+//                  PS_VLOG(1)<<"no matched keys when merging";
+                  CHECK_EQ(0,1)<<"no matched keys when merging";
+              }
+          }
       }
+//      PS_VLOG(1)<<"start pulling: finish filling";
 
       mu_.lock();
       recv_kvs_.erase(ts);

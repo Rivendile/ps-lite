@@ -54,7 +54,7 @@ void Van::ProcessAddNodeCommandAtScheduler(
                  Postoffice::ServerRankToID(num_servers_) :
                  Postoffice::WorkerRankToID(num_workers_);
         PS_VLOG(1) << "assign rank=" << id << " to node " << node.DebugString();
-        PS_VLOG(1) << "This is Rivendile's PS-lite!!!";
+//        PS_VLOG(1) << "This is Rivendile's PS-lite!!!";
         node.id = id;
         Connect(node);
         Postoffice::Get()->UpdateHeartbeat(node.id, t);
@@ -182,7 +182,7 @@ void Van::ProcessBarrierCommand(Message* msg) {
     int group = ctrl.barrier_group;
     ++barrier_count_[group];
     PS_VLOG(1) << "Barrier count for " << group << " : " << barrier_count_[group];
-    PS_VLOG(1) << "This is Rivendile's PS-lite!!!";
+//    PS_VLOG(1) << "This is Rivendile's PS-lite!!!";
     if (barrier_count_[group] ==
         static_cast<int>(Postoffice::Get()->GetNodeIDs(group).size())) {
       barrier_count_[group] = 0;
@@ -290,7 +290,7 @@ void Van::Start(int customer_id) {
     // bind.
     my_node_.port = Bind(my_node_, is_scheduler_ ? 0 : 40);
     PS_VLOG(1) << "Bind to " << my_node_.DebugString();
-    PS_VLOG(1) << "This is Rivendile's PS-lite!!!";
+//    PS_VLOG(1) << "This is Rivendile's PS-lite!!!";
     CHECK_NE(my_node_.port, -1) << "bind failed";
 
     // connect to the scheduler
