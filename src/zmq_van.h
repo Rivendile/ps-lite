@@ -8,6 +8,7 @@
 #include <thread>
 #include <string>
 #include "ps/internal/van.h"
+#include <time.h>
 #if _MSC_VER
 #define rand_r(x) rand()
 #endif
@@ -123,6 +124,7 @@ class ZMQVan : public Van {
   }
 
   int SendMsg(const Message& msg) override {
+    PS_VLOG(1)<<"Enter SendMsg: "<<(double)clock()/CLOCKS_PER_SEC;
     std::lock_guard<std::mutex> lk(mu_);
     // find the socket
     int id = msg.meta.recver;
@@ -167,6 +169,7 @@ class ZMQVan : public Van {
       // zmq_msg_close(&data_msg);
       send_bytes += data_size;
     }
+    PS_VLOG(1)<<"Exit SendMsg: "<<(double)clock()/CLOCKS_PER_SEC;
     return send_bytes;
   }
 

@@ -12,6 +12,7 @@
 #include "./meta.pb.h"
 #include "./zmq_van.h"
 #include "./resender.h"
+#include <time.h>
 namespace ps {
 
 // interval in second between to heartbeast signals. 0 means no heartbeat.
@@ -368,6 +369,7 @@ void Van::Stop() {
 }
 
 int Van::Send(const Message& msg) {
+  PS_VLOG(1)<<"Enter Send: "<<(double)clock()/CLOCKS_PER_SEC;
   int send_bytes = SendMsg(msg);
   CHECK_NE(send_bytes, -1);
   send_bytes_ += send_bytes;
@@ -375,6 +377,7 @@ int Van::Send(const Message& msg) {
   if (Postoffice::Get()->verbose() >= 2) {
     PS_VLOG(2) << msg.DebugString();
   }
+  PS_VLOG(1)<<"Exit Send: "<<(double)clock()/CLOCKS_PER_SEC;
   return send_bytes;
 }
 

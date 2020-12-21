@@ -28,7 +28,7 @@ void RunWorker() {
   }
 
   // push
-  int repeat = 20;
+  int repeat = 2;
   std::vector<int> ts;
   for (int i = 0; i < repeat; ++i) {
     ts.push_back(kv.Push(keys, vals));

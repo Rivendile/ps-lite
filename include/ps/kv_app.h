@@ -9,6 +9,7 @@
 #include "ps/base.h"
 #include "ps/simple_app.h"
 #include "ps/internal/postoffice.h"
+#include <time.h>
 namespace ps {
 
 /**
@@ -186,6 +187,7 @@ class KVWorker : public SimpleApp {
             const SArray<int>& lens = {},
             int cmd = 0,
             const Callback& cb = nullptr) {
+    PS_VLOG(1)<<"Enter ZPush: "<<(double)clock()/CLOCKS_PER_SEC;
     int ts = obj_->NewRequest(kServerGroup);
     AddCallback(ts, cb);
     KVPairs<Val> kvs;
@@ -193,6 +195,7 @@ class KVWorker : public SimpleApp {
     kvs.vals = vals;
     kvs.lens = lens;
     Send(ts, true, cmd, kvs);
+    PS_VLOG(1)<<"Exit ZPush: "<<(double)clock()/CLOCKS_PER_SEC;
     return ts;
   }
 
@@ -555,6 +558,9 @@ void KVWorker<Val>::ModSlicer(
 
 template <typename Val>
 void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& kvs) {
+    
+  PS_VLOG(1)<<"Enter Send: "<<(double)clock()/CLOCKS_PER_SEC;
+    
   // slice the message
   SlicedKVs sliced;
   slicer_(kvs, Postoffice::Get()->GetServerKeyRanges(), &sliced);
@@ -590,6 +596,7 @@ void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& 
     }
     Postoffice::Get()->van()->Send(msg);
   }
+  PS_VLOG(1)<<"Exit Send: "<<(double)clock()/CLOCKS_PER_SEC;
 }
 
 
