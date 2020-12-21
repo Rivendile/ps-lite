@@ -124,7 +124,7 @@ class ZMQVan : public Van {
   }
 
   int SendMsg(const Message& msg) override {
-    PS_VLOG(1)<<"Enter SendMsg: "<<(double)clock()/CLOCKS_PER_SEC;
+    PS_VLOG(1)<<"Enter SendMsg: "<<(double)clock()/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
     std::lock_guard<std::mutex> lk(mu_);
     // find the socket
     int id = msg.meta.recver;
@@ -169,7 +169,7 @@ class ZMQVan : public Van {
       // zmq_msg_close(&data_msg);
       send_bytes += data_size;
     }
-    PS_VLOG(1)<<"Exit SendMsg: "<<(double)clock()/CLOCKS_PER_SEC;
+    PS_VLOG(1)<<"Exit SendMsg: "<<(double)clock()/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
     return send_bytes;
   }
 

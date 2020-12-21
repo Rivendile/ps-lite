@@ -187,7 +187,7 @@ class KVWorker : public SimpleApp {
             const SArray<int>& lens = {},
             int cmd = 0,
             const Callback& cb = nullptr) {
-    PS_VLOG(1)<<"Enter ZPush: "<<(double)clock()/CLOCKS_PER_SEC;
+    PS_VLOG(1)<<"Enter ZPush: "<<(double)clock()/CLOCKS_PER_SEC<<" "<<keys[0];
     int ts = obj_->NewRequest(kServerGroup);
     AddCallback(ts, cb);
     KVPairs<Val> kvs;
@@ -195,7 +195,7 @@ class KVWorker : public SimpleApp {
     kvs.vals = vals;
     kvs.lens = lens;
     Send(ts, true, cmd, kvs);
-    PS_VLOG(1)<<"Exit ZPush: "<<(double)clock()/CLOCKS_PER_SEC;
+    PS_VLOG(1)<<"Exit ZPush: "<<(double)clock()/CLOCKS_PER_SEC<<" "<<keys[0];
     return ts;
   }
 
@@ -559,7 +559,7 @@ void KVWorker<Val>::ModSlicer(
 template <typename Val>
 void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& kvs) {
     
-  PS_VLOG(1)<<"Enter Send: "<<(double)clock()/CLOCKS_PER_SEC;
+  PS_VLOG(1)<<"Enter KVWorker Send: "<<(double)clock()/CLOCKS_PER_SEC<<" "<<kvs.keys[0];
     
   // slice the message
   SlicedKVs sliced;
@@ -586,6 +586,7 @@ void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& 
     msg.meta.head        = cmd;
     msg.meta.timestamp   = timestamp;
     msg.meta.recver      = Postoffice::Get()->ServerRankToID(i);
+    msg.meta.sender      = Postoffice::Get()->van()->my_node().id;
     const auto& kvs = s.second;
     if (kvs.keys.size()) {
       msg.AddData(kvs.keys);
@@ -596,7 +597,7 @@ void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& 
     }
     Postoffice::Get()->van()->Send(msg);
   }
-  PS_VLOG(1)<<"Exit Send: "<<(double)clock()/CLOCKS_PER_SEC;
+  PS_VLOG(1)<<"Exit KVWorker Send: "<<(double)clock()/CLOCKS_PER_SEC<<" "<<kvs.keys[0];
 }
 
 
