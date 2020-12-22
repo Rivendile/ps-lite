@@ -124,9 +124,8 @@ class ZMQVan : public Van {
   }
 
   int SendMsg(const Message& msg) override {
-      
+    double time_st = (double)clock();
     if (Postoffice::Get()->verbose() >= 3) {
-      double time_st = (double)clock();
       PS_VLOG(3)<<"Enter SendMsg: "<<time_st/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
     }
     std::lock_guard<std::mutex> lk(mu_);

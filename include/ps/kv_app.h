@@ -187,8 +187,8 @@ class KVWorker : public SimpleApp {
             const SArray<int>& lens = {},
             int cmd = 0,
             const Callback& cb = nullptr) {
+    double time_st = (double)clock();
     if (Postoffice::Get()->verbose() >= 3) {
-      double time_st = (double)clock();
       PS_VLOG(3)<<"Enter ZPush: "<<time_st/CLOCKS_PER_SEC<<" "<<keys[0];
     }
     int ts = obj_->NewRequest(kServerGroup);
@@ -564,8 +564,8 @@ void KVWorker<Val>::ModSlicer(
 
 template <typename Val>
 void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& kvs) {
+  double time_st = (double)clock();
   if (Postoffice::Get()->verbose() >= 3) {
-    double time_st = (double)clock();
     PS_VLOG(3)<<"Enter KVWorker Send: "<<time_st/CLOCKS_PER_SEC<<" "<<kvs.keys[0];
   }
   // slice the message

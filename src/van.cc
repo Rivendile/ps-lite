@@ -369,8 +369,8 @@ void Van::Stop() {
 }
 
 int Van::Send(const Message& msg) {
+  double time_st = (double)clock();
   if (Postoffice::Get()->verbose() >= 3) {
-    double time_st = (double)clock();
     PS_VLOG(3)<<"Enter Van Send: "<<time_st/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
   }
   int send_bytes = SendMsg(msg);
