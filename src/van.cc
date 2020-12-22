@@ -370,19 +370,19 @@ void Van::Stop() {
 
 int Van::Send(const Message& msg) {
   double time_st = (double)clock();
-  if (Postoffice::Get()->verbose() >= 3) {
-    PS_VLOG(3)<<"Enter Van Send: "<<time_st/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
+  if (Postoffice::Get()->verbose() >= 2) {
+    PS_VLOG(2)<<"Enter Van Send: "<<time_st/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
   }
   int send_bytes = SendMsg(msg);
   CHECK_NE(send_bytes, -1);
   send_bytes_ += send_bytes;
   if (resender_) resender_->AddOutgoing(msg);
-  if (Postoffice::Get()->verbose() >= 2) {
-    PS_VLOG(2) << msg.DebugString();
-  }
   if (Postoffice::Get()->verbose() >= 3) {
+    PS_VLOG(3) << msg.DebugString();
+  }
+  if (Postoffice::Get()->verbose() >= 2) {
     double time_end = (double)clock();
-    PS_VLOG(3)<<"Exit Van Send: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
+    PS_VLOG(2)<<"Exit Van Send: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
   }
   return send_bytes;
 }
@@ -406,8 +406,8 @@ void Van::Receiving() {
 
     CHECK_NE(recv_bytes, -1);
     recv_bytes_ += recv_bytes;
-    if (Postoffice::Get()->verbose() >= 2) {
-      PS_VLOG(2) << msg.DebugString();
+    if (Postoffice::Get()->verbose() >= 3) {
+      PS_VLOG(3) << msg.DebugString();
     }
     // duplicated message
     if (resender_ && resender_->AddIncomming(msg)) continue;

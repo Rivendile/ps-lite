@@ -125,8 +125,8 @@ class ZMQVan : public Van {
 
   int SendMsg(const Message& msg) override {
     double time_st = (double)clock();
-    if (Postoffice::Get()->verbose() >= 3) {
-      PS_VLOG(3)<<"Enter SendMsg: "<<time_st/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
+    if (Postoffice::Get()->verbose() >= 2) {
+      PS_VLOG(2)<<"Enter SendMsg: "<<time_st/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
     }
     std::lock_guard<std::mutex> lk(mu_);
     // find the socket
@@ -172,9 +172,9 @@ class ZMQVan : public Van {
       // zmq_msg_close(&data_msg);
       send_bytes += data_size;
     }
-    if (Postoffice::Get()->verbose() >= 3) {
+    if (Postoffice::Get()->verbose() >= 2) {
       double time_end = (double)clock();
-      PS_VLOG(3)<<"Exit SendMsg: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end - time_st)/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
+      PS_VLOG(2)<<"Exit SendMsg: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end - time_st)/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
     }
     return send_bytes;
   }
