@@ -369,8 +369,10 @@ void Van::Stop() {
 }
 
 int Van::Send(const Message& msg) {
+  if (Postoffice::Get()->verbose() >= 3) {
     double time_st = (double)clock();
-    PS_VLOG(1)<<"Enter Van Send: "<<time_st/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
+    PS_VLOG(3)<<"Enter Van Send: "<<time_st/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
+  }
   int send_bytes = SendMsg(msg);
   CHECK_NE(send_bytes, -1);
   send_bytes_ += send_bytes;
@@ -378,8 +380,10 @@ int Van::Send(const Message& msg) {
   if (Postoffice::Get()->verbose() >= 2) {
     PS_VLOG(2) << msg.DebugString();
   }
+  if (Postoffice::Get()->verbose() >= 3) {
     double time_end = (double)clock();
-  PS_VLOG(1)<<"Exit Van Send: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
+    PS_VLOG(3)<<"Exit Van Send: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<msg.meta.sender<<" "<<msg.meta.recver;
+  }
   return send_bytes;
 }
 

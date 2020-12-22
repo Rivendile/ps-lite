@@ -187,8 +187,10 @@ class KVWorker : public SimpleApp {
             const SArray<int>& lens = {},
             int cmd = 0,
             const Callback& cb = nullptr) {
+    if (Postoffice::Get()->verbose() >= 3) {
       double time_st = (double)clock();
-    PS_VLOG(1)<<"Enter ZPush: "<<time_st/CLOCKS_PER_SEC<<" "<<keys[0];
+      PS_VLOG(3)<<"Enter ZPush: "<<time_st/CLOCKS_PER_SEC<<" "<<keys[0];
+    }
     int ts = obj_->NewRequest(kServerGroup);
     AddCallback(ts, cb);
     KVPairs<Val> kvs;
@@ -196,8 +198,10 @@ class KVWorker : public SimpleApp {
     kvs.vals = vals;
     kvs.lens = lens;
     Send(ts, true, cmd, kvs);
+    if (Postoffice::Get()->verbose() >= 3) {
       double time_end = (double)clock();
-    PS_VLOG(1)<<"Exit ZPush: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<keys[0];
+      PS_VLOG(3)<<"Exit ZPush: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<keys[0];
+    }
     return ts;
   }
 
@@ -560,9 +564,10 @@ void KVWorker<Val>::ModSlicer(
 
 template <typename Val>
 void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& kvs) {
+  if (Postoffice::Get()->verbose() >= 3) {
     double time_st = (double)clock();
-  PS_VLOG(1)<<"Enter KVWorker Send: "<<time_st/CLOCKS_PER_SEC<<" "<<kvs.keys[0];
-    
+    PS_VLOG(3)<<"Enter KVWorker Send: "<<time_st/CLOCKS_PER_SEC<<" "<<kvs.keys[0];
+  }
   // slice the message
   SlicedKVs sliced;
   slicer_(kvs, Postoffice::Get()->GetServerKeyRanges(), &sliced);
@@ -599,8 +604,10 @@ void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& 
     }
     Postoffice::Get()->van()->Send(msg);
   }
+  if (Postoffice::Get()->verbose() >= 3) {
     double time_end = (double)clock();
-  PS_VLOG(1)<<"Exit KVWorker Send: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<kvs.keys[0];
+    PS_VLOG(3)<<"Exit KVWorker Send: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<kvs.keys[0];
+  }
 }
 
 
