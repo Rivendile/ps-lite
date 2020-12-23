@@ -187,10 +187,10 @@ class KVWorker : public SimpleApp {
             const SArray<int>& lens = {},
             int cmd = 0,
             const Callback& cb = nullptr) {
-    double time_st = (double)clock();
-    if (Postoffice::Get()->verbose() >= 2) {
-      PS_VLOG(2)<<"Enter ZPush: "<<time_st/CLOCKS_PER_SEC<<" "<<keys[0];
-    }
+//    double time_st = (double)clock();
+//    if (Postoffice::Get()->verbose() >= 2) {
+//      PS_VLOG(2)<<"Enter ZPush: "<<time_st/CLOCKS_PER_SEC<<" "<<keys.size();
+//    }
     int ts = obj_->NewRequest(kServerGroup);
     AddCallback(ts, cb);
     KVPairs<Val> kvs;
@@ -198,10 +198,10 @@ class KVWorker : public SimpleApp {
     kvs.vals = vals;
     kvs.lens = lens;
     Send(ts, true, cmd, kvs);
-    if (Postoffice::Get()->verbose() >= 2) {
-      double time_end = (double)clock();
-      PS_VLOG(2)<<"Exit ZPush: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<keys[0];
-    }
+//    if (Postoffice::Get()->verbose() >= 2) {
+//      double time_end = (double)clock();
+//      PS_VLOG(2)<<"Exit ZPush: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<keys.size();
+//    }
     return ts;
   }
 
@@ -566,7 +566,7 @@ template <typename Val>
 void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& kvs) {
   double time_st = (double)clock();
   if (Postoffice::Get()->verbose() >= 2) {
-    PS_VLOG(2)<<"Enter KVWorker Send: "<<time_st/CLOCKS_PER_SEC<<" "<<kvs.keys[0];
+    PS_VLOG(2)<<"Enter KVWorker Send: "<<time_st/CLOCKS_PER_SEC<<" "<<kvs.keys.size();
   }
   // slice the message
   SlicedKVs sliced;
@@ -606,7 +606,7 @@ void KVWorker<Val>::Send(int timestamp, bool push, int cmd, const KVPairs<Val>& 
   }
   if (Postoffice::Get()->verbose() >= 2) {
     double time_end = (double)clock();
-    PS_VLOG(2)<<"Exit KVWorker Send: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<kvs.keys[0];
+    PS_VLOG(2)<<"Exit KVWorker Send: "<<time_end/CLOCKS_PER_SEC<<" "<<(time_end-time_st)/CLOCKS_PER_SEC<<" "<<kvs.keys.size();
   }
 }
 
